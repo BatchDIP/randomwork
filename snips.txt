@@ -1,0 +1,603 @@
+---------Exp 2:Point Processing
+Negation
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from google.colab.patches import cv2_imshow
+
+img = cv2.imread('/content/Negation.bmp', 0)  # Read the grayscale image (0 for grayscale mode)
+plt.imshow(img, cmap='gray')  # Display the grayscale image
+plt.show()
+
+height, width = img.shape  # Get the image dimensions
+
+for i in range(height):
+    for j in range(width):
+        pixel = img[i, j]
+        pixel = 255 - pixel  # Invert the pixel value
+        img[i, j] = pixel
+
+plt.imshow(img, cmap='gray')  # Display the negated image
+plt.show()
+
+#log_transform
+
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from google.colab.patches import cv2_imshow
+img1 = cv2.imread("/content/Log.bmp",0)
+cv2_imshow(img1)
+c = 255/(np.log(1 + np.max(img1))) #SCALING FACTOR
+log_transformed = c * np.log(1 + img1) #transformed image
+ 
+# Save the output.
+cv2_imshow(log_transformed)
+
+#power log 
+img2=cv2.imread('/content/Power law.bmp')
+for gamma in [0.1, 0.5,0.798, 1.2, 2.2]:
+ gamma_corrected = np.array(255*(img2 / 255) ** gamma, dtype = 'uint8')
+ cv2_imshow(gamma_corrected
+
+#horizontal_flipping
+
+import cv2
+import matplotlib.pyplot as plt
+import array as arr
+img3 = cv2.imread('/content/cameraman.bmp', 0)
+w,h = a.shape
+z=a.copy()
+plt.imshow(a,cmap='gray')
+plt.show()
+#print(a)
+for x in range(w-1):
+ for y in range(h-1):
+  z[x,y]=a[x,h-y-1]
+plt.imshow(z,cmap='gray')
+plt.show()
+
+#vertical_flipping
+
+w,h = a.shape
+p=a.copy()
+plt.imshow(a)
+plt.show()
+for x in range(w-1):
+ for y in range(h-1):
+   p[x,y]=a[w-x-1,y]
+plt.imshow(p)
+plt.show()
+
+
+---------Exp 3;enhancement operations
+#Contrast Stretching
+
+import cv2
+import matplotlib.pyplot as plt
+import array as arr
+pixelmat= cv2.imread('/content/DIP3E_Original_Images_CH03/Fig0316(3)(third_from_top).tif',0)
+wid,hei= pixelmat.shape
+img2= pixelmat.copy()
+r1=int(input('Enter the value of r1 : '))
+s1=int(input('Enter the value of s1 : '))
+r2=int(input('Enter the value of r2 : '))
+s2=int(input('Enter the value of s2 : '))
+m1 = s1 / r1
+m2 = (s2 - s1) / (r2 - r1)
+m3 = (255 - s2) / (255 - r2)
+
+for i in range(wid-1):
+    for j in range(hei-1):
+        if pixelmat[i][j] < r1:
+            img2[i][j] = m1 * pixelmat[i][j]
+        elif r1 <= pixelmat[i][j] <= r2:
+            img2[i][j] = (pixelmat[i][j] - r1) * m2 + s1
+        else:
+            img2[i][j] = (pixelmat[i][j] - r2) * m3 + s2
+plt.imshow(pixelmat, cmap='gray')
+plt.show() 
+#gray=cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
+plt.imshow(img2, cmap='gray')
+plt.show()
+#Gray Level Slicing 1 w/o background
+
+from google.colab.patches import cv2_imshow
+from collections import Counter
+import cv2
+import numpy as np #thresholding is without background
+# Load the image
+img3 = cv2.imread('/content/DIP3E_Original_Images_CH03/Fig0312(a)(kidney).tif', 0)
+# Define the lower and upper threshold values
+lower = 70
+upper = 150
+# Create a mask with values between the threshold values
+mask = cv2.inRange(img3, lower, upper)
+print(f'{unique}:{counts}')
+print('Shape of the Image',img3.shape)
+print('Shape of the mask',mask.shape)
+# Apply the mask to the original image
+result = cv2.bitwise_and(img3, img3, mask=mask)
+print(result)
+# Display the result
+cv2_imshow(img3)
+cv2_imshow(result)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+#Gray Level Slicing 2 with background(keeping rest pixels the same)
+
+img3 = cv2.imread('/content/DIP3E_Original_Images_CH03/Fig0312(a)(kidney).tif',0)
+op = img3
+for i in range(img3.shape[0]):
+    for j in range(img3.shape[1]):
+        if img3[i, j] >= 70 and img3[i, j] < 150:
+            op[i, j] = 0 #value to assign the sliced values
+
+cv2_imshow(op)
+#Bit Plane slicing:
+
+import cv2
+import numpy as np
+from google.colab.patches import cv2_imshow
+from collections import Counter
+# Load the image
+img2 = cv2.imread('/content/DIP3E_Original_Images_CH03/Fig0314(a)(100-dollars).tif', 0)
+# Perform bit plane slicing
+slices = []
+for i in range(8):
+ plane = np.zeros_like(img2)
+ print(plane)
+ plane[img2 & (1 << i) != 0] = 255
+ slices.append(plane)
+# Display the bit planes
+cv2_imshow(img2)
+for i, slice in enumerate(slices):
+ cv2_imshow( slice)
+ cv2.imwrite("/content/bit_plane_slicing"+str(i)+".jpg",slice)
+ print(slice)
+
+
+---------Exp 4:Histogram Equalization
+#observing image histogram
+
+img = cv2.imread('/content/dark image.bmp', 0)
+# Compute histogram
+hist, bins = np.histogram(img.flatten(), bins=256, range = [0, 256])
+# Plot histogram
+plt.plot(hist)
+# Show plot
+plt.show()
+
+Histogram Equalization:
+
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+def histogram_equalization(image):
+    # Compute histogram
+    histogram = np.zeros(256, dtype=int)
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            histogram[image[i, j]] += 1
+
+    # Compute cumulative distribution function (CDF)
+    cdf = np.zeros(256, dtype=int)
+    cdf[0] = histogram[0]
+    for i in range(1, 256):
+        cdf[i] = cdf[i - 1] + histogram[i]
+
+    # Compute equalized histogram
+    equalized_histogram = np.round((cdf / np.sum(histogram)) * 255)
+
+    # Perform histogram equalization
+    equalized_image = np.zeros_like(image)
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            equalized_image[i, j] = equalized_histogram[image[i, j]]
+
+    # Compute histogram of equalized image
+    equalized_histogram = np.zeros(256, dtype=int)
+    for i in range(equalized_image.shape[0]):
+        for j in range(equalized_image.shape[1]):
+            equalized_histogram[equalized_image[i, j]] += 1
+
+    return equalized_image, equalized_histogram
+
+# Load the image
+image = cv2.imread('/content/hist1.bmp', cv2.IMREAD_GRAYSCALE)
+
+# Perform histogram equalization and compute histogram
+equalized_image, equalized_histogram = histogram_equalization(image)
+
+# Display the original and equalized images
+cv2_imshow( image)
+cv2_imshow(equalized_image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Display the histogram of the equalized image
+plt.figure()
+plt.bar(range(256), equalized_histogram)
+plt.xlabel('Pixel Intensity')
+plt.ylabel('Frequency')
+plt.title('Histogram of Equalized Image')
+plt.show()
+---------Exp 5:Smoothing Filters:
+Averaging Filter:
+
+###Averaging Filter
+import numpy as np
+import cv2
+from google.colab.patches import cv2_imshow
+
+img = cv2.imread('/content/DIP3E_Original_Images_CH03/Fig0333(a)(test_pattern_blurring_orig).tif',cv2.IMREAD_GRAYSCALE)
+cv2_imshow(img)
+print(img.shape)
+#make an empty img matrix same shape as img to store the result
+avg = np.zeros_like(img)
+
+#padding the img with padding of layer 1,1
+padded_img = np.pad(img,((1,1),(1,1)),mode = 'constant')
+
+#create kernel of shape 3x3 and val 1/9
+kernel = np.ones((3,3),dtype='float32')/9.0
+
+#convolve kernel about the image and perform the filtering operation
+
+for i in range(img.shape[0]):
+  for j in range(img.shape[1]):
+    avg[i,j] = np.sum(kernel*padded_img[i:i+3,j:j+3]) #matmul and sum of kernel with padded image
+    #padded image i to i+2 and j to j+2 i.e multiplying contents of kernel with the padded image to get the avg filter output
+
+# cv2.putText(img,"Original Image",(10,30),cv2.FONT_HERSHEY_SIMPLEX)
+cv2_imshow(img)
+# cv2.putText(avg,"Final Image",(10,30),cv2.FONT_HERSHEY_SIMPLEX)
+cv2_imshow(avg)
+
+
+#Weighted Averaging 
+
+img = cv2.imread('/content/DIP3E_Original_Images_CH03/Fig0333(a)(test_pattern_blurring_orig).tif',cv2.IMREAD_GRAYSCALE)
+padded_img = np.pad(img,((1,1),(1,1)),mode = 'constant')
+
+kernel = np.array([1,2,1,2,4,2,1,2,1],dtype='float32').reshape(3,3)/16.0
+print(img.shape)
+weight_avg = np.zeros_like(img)
+for i in range(img.shape[0]):
+  for j in range(img.shape[1]): 
+    weighted_sum = 0.0
+    kernel_sum = 0.0
+    #convolving the kernel through 3 rows and cols and obtaining the weighted average
+    for k in range(-1,2):
+      for l in range(-1,2):
+        pixel_val = padded_img[i+k+1,j+l+1]
+        weights_kernel = kernel[k+1,l+1]
+        weighted_sum += pixel_val*weights_kernel
+        kernel_sum += weights_kernel
+    weight_avg[i,j] = weighted_sum/kernel_sum
+cv2_imshow(img)
+cv2_imshow(weight_avg)
+
+
+#Median Filter 
+
+import numpy as np
+import cv2
+from google.colab.patches import cv2_imshow
+# Load the image
+img = cv2.imread('/content/DIP3E_Original_Images_CH03/Fig0335(a)(ckt_board_saltpep_prob_pt05).tif', cv2.IMREAD_GRAYSCALE)
+
+output = np.zeros_like(img)
+
+padded_img = np.pad(img, ((1,1),(1,1)), mode='constant')
+for i in range(img.shape[0]):
+    for j in range(img.shape[1]):
+        # Extract the local window
+        window = padded_img[i:i+3, j:j+3]
+        # Sort the window pixels and take the median value
+        median = np.median(window)
+        # Set the output pixel value to the median value
+        output[i, j] = median
+print('Image with Salt and Pepper Noise')
+cv2_imshow(img)
+print('Applied Median Filter Image')
+cv2_imshow(output)
+
+---------Exp 6:Point Detection,Line and Global Thresh
+ 
+#Point Detection 
+
+
+import cv2 #point det
+
+from google.colab.patches import cv2_imshow
+
+#Load an image
+
+img=cv2.imread('/content/Fig1004(b)(turbine_blade_black_dot).tif', cv2.IMREAD_GRAYSCALE)
+
+# Apply a Laplacian filter to detect edges
+laplacian= cv2.Laplacian(img, cv2.CV_64F)
+scale_factor = 0.5
+laplacian = cv2.convertScaleAbs(laplacian, alpha=scale_factor)  #scaling down the function by a certain factor
+#Threshold the output image to find points of interest
+threshold_value = 100
+#points= cv2.threshold(laplacian, threshold_value, 255, cv2.THRESH_BINARY)[1]
+points = (laplacian>threshold_value).astype('uint8') *255.0
+# Display the result
+cv2_imshow(img)
+
+cv2_imshow(laplacian)
+
+cv2_imshow(points)
+
+
+###Line Detection
+
+import cv2
+import numpy as np
+
+img = cv2.imread('/content/Fig1005(a)(wirebond_mask).tif', 0)
+
+# Define the original kernel
+kernel = np.array([[-1,-1,-1],[2,2,2],[-1,-1,-1]])
+
+# Define the 45-degree rotated kernel
+rot_kernel = np.array([[2,-1,-1],[-1,2,-1],[-1,-1,2]])
+
+# Define the horizontal kernel
+h_kernel = np.array([[-1,-1,-1],[2,2,2],[-1,-1,-1]])
+
+# Define the vertical kernel
+v_kernel = np.array([[-1,2,-1],[-1,2,-1],[-1,2,-1]])
+
+edges_orig = np.zeros_like(img,dtype=np.uint8)
+edges_rot = np.zeros_like(img,dtype=np.uint8)
+edges_h = np.zeros_like(img,dtype=np.uint8)
+edges_v = np.zeros_like(img,dtype=np.uint8)
+
+padded_img = np.pad(img,pad_width=((1,1),(1,1)),mode = "constant")
+# Loop over each pixel in the image
+for i in range(img.shape[0]):
+    for j in range(1, img.shape[1]):
+        # Multiply the original kernel with the corresponding pixel values in the image
+        edges_orig[i,j] = np.sum(kernel*padded_img[i:i+3,j:j+3]) #matmul and sum of kernel with padded image
+    #padded image i to i+2 and j to j+2 i.e multiplying contents of kernel with the padded image to get the filter output
+for i in range(img.shape[0]):
+    for j in range(1, img.shape[1]):
+        edges_rot[i,j] = np.sum(rot_kernel*padded_img[i:i+3,j:j+3])
+
+for i in range(img.shape[0]):
+    for j in range(1, img.shape[1]):
+        edges_h[i,j] = np.sum(h_kernel*padded_img[i:i+3,j:j+3])
+
+for i in range(img.shape[0]):
+    for j in range(1, img.shape[1]):
+        edges_v[i,j] = np.sum(v_kernel*padded_img[i:i+3,j:j+3])
+
+cv2_imshow(img)
+cv2_imshow(edges_orig)
+cv2_imshow(edges_rot)
+cv2_imshow(edges_h)
+cv2_imshow(edges_v)
+
+
+####Global Thresh
+
+img = cv2.imread('/content/DIP3E_Original_Images_CH10/Fig1038(a)(noisy_fingerprint).tif',0)
+def thresholding_function(img,delta_T):
+  T = np.mean(img) #Taking initial estimate of T
+
+  while True:
+    G1 = (img>T) #Image segment threshold indexes
+    G2 = (img<=T) #i.e the indexes where the pixels with given intensity levels lie
+    m1 = np.mean(img[G1])
+    m2 = np.mean(img[G2])
+
+    new_T = (m1+m2)*0.5
+
+    if(abs(new_T-T)) >= delta_T:
+      break
+    T = new_T
+  thresholded_img = (img>T).astype('uint8') * 255.0
+  return thresholded_img
+  
+thresholding_img = thresholding_function(img,0.01)
+cv2_imshow(img)
+cv2_imshow(thresholding_img)
+
+---------Exp 7:Robert,Prewitt,Sobel:
+###Roberts edge detection
+
+def roberts(img):
+    # Define Roberts kernels
+    kernel1 = np.array([[1, 0], [0, -1]], dtype=np.float32)
+    kernel2 = np.array([[0, 1], [-1, 0]], dtype=np.float32)
+
+    # Apply kernels to image
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gx = cv2.filter2D(img, -1, kernel1)
+    gy = cv2.filter2D(img, -1, kernel2)
+    mag = np.abs(gx) + np.abs(gy)
+    mag = np.uint8(mag)
+
+    return gx,gy,mag
+gx_rob,gy_rob,rob_det = roberts(edge_img)
+#cv2_imshow(edge_img)
+print('x axis component')
+cv2_imshow(gx_rob)
+print('y axis component')
+cv2_imshow(gy_rob)
+print('aggregate image')
+cv2_imshow(rob_det)
+
+####Prewitt 
+
+def prewitt(image):
+    kernel_y = np.array([[-1, 0, 1], 
+                         [-1, 0, 1], 
+                         [-1, 0, 1]], dtype=np.float32)
+    kernel_x = np.array([[-1, -1, -1], 
+                          [0, 0, 0], 
+                          [1, 1, 1]], dtype=np.float32)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    print(image.shape)
+    x_edges = cv2.filter2D(image, -1, kernel_x)
+    y_edges = cv2.filter2D(image, -1, kernel_y)
+    edges = mag = np.abs(x_edges) + np.abs(y_edges)
+    edges = np.uint8(edges)
+    return x_edges,y_edges,edges
+x,y,edges = prewitt(edge_img)
+print('x axis component')
+cv2_imshow(x)
+print('y axis component')
+cv2_imshow(y)
+print('aggregate image')
+cv2_imshow(edges)
+
+
+####Sobel
+
+def sobel(image):
+    # Define Sobel kernels
+    kernel_y = np.array([[-1, 0, 1], 
+                         [-2, 0, 2], 
+                         [-1, 0, 1]], dtype=np.float32)
+    kernel_x = np.array([[-1, -2, -1], 
+                           [0, 0, 0], 
+                           [1, 2, 1]], dtype=np.float32)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    x_edges = cv2.filter2D(image, -1, kernel_x)
+    y_edges = cv2.filter2D(image, -1, kernel_y)
+    edges = np.abs(x_edges) + np.abs(y_edges)
+    edges = np.uint8(edges)
+
+    return x_edges,y_edges,edges
+x,y,edges = sobel(edge_img)
+print('x axis component')
+cv2_imshow(x)
+print('y axis component')
+cv2_imshow(y)
+print('aggregate image')
+cv2_imshow(edges)
+
+---------Exp 8:DCT
+
+###DCT Matrix only
+
+import numpy as np
+
+I = np.array([154, 123, 123, 123, 123, 123, 123, 136, 192, 180, 136, 154, 154, 154, 136, 110, 254, 198, 154, 154, 180, 154, 123, 123, 239, 180, 136, 180, 180, 166, 123, 123, 180, 154, 136, 167, 166, 149, 136, 136, 128, 136, 123, 136, 154, 180, 198, 154, 123, 105, 110, 149, 136, 136, 180, 166, 110, 136, 123, 123, 123, 136, 154, 136])
+#input image
+M = I - 128 #0 to 255 to -128 to 128
+T = np.zeros((8, 8))
+#N = 8
+for i in range(8):
+    for j in range(8):
+        if i == 0:
+            T[i, j] = np.sqrt(1/8)
+        else:
+            T[i, j] = np.sqrt(2/8) * np.cos(((2*j)+1)*i*np.pi/16)
+
+D_m = np.dot(T, M.reshape((8, 8)))
+D = np.dot(D_M,np.transpose(T)) #DCT matrix
+Q = np.array([16, 11, 10, 16, 24, 40, 51, 61, 12, 12, 14, 19, 26, 58, 60, 55, 14, 13, 16, 24, 40, 57, 69, 56, 14, 17, 22, 29, 51, 87, 80, 62, 18, 22, 37, 56, 68, 109, 103, 77, 24, 35, 55, 64, 81, 104, 113, 92, 49, 64, 78, 87, 103, 121, 120, 101, 72, 92, 95, 98, 112, 100, 103, 99])
+Q = Q.reshape((8, 8))
+C = np.round(D/Q) #coeff matrix c=d/q c*q = d c*q = r
+R = Q*C #Reconstructed DCT
+N = np.round(np.dot(np.dot(np.transpose(T), R), T) + 128) D= T(I-128)T' N=T'RT
+#reconstructed image
+print("M",M)
+print("\n")
+
+print("Q",Q)
+print("\n")
+
+print("D",D)
+print("\n")
+
+print("C",C)
+print("\n")
+
+print("R",R)
+print("\n")
+
+print("I: ", I)
+print("\n")
+
+print("N: ", N)
+
+
+
+---------Exp 9:Huffman 
+
+from collections import Counter
+
+class NodesTree(object):
+  def __init__(self,left=None,right=None):
+    self.left=left
+    self.right=right
+
+  def children(self):
+    return self.left,self.right
+
+  def __str(self):
+    return str(self.left) + " " + str(self.right)
+
+def huffman_encoding_tree(node,binstring=''): #node the particular node key to encode;binString the huffman encoding for the particular node
+    if(type(node) is str):
+      return{node:binstring} #the final node to encoding value to return
+    d = {}
+    l,r = node.children()#taking the l and r of the node
+    d.update(huffman_encoding_tree(l,binstring+'1'))
+    d.update(huffman_encoding_tree(r,binstring+'0'))
+    return d
+
+def make_tree(nodes):
+  """
+  function to construct the tree and append it to a given nodes array
+  """
+  while(len(nodes)>1):
+    left,c1 = nodes[-1] #taking the leaf nodes adding their probab
+    right,c2 = nodes[-2] # and converting to a new aggregate node
+    nodes = nodes[:-2] #truncate the leafs
+    new_node = NodesTree(left,right) #creating a new node out of the 2 leaves
+    nodes.append((new_node,c1+c2))
+    nodes = sorted(nodes,key = lambda x:x[1],reverse=True)
+    print(nodes)
+  return nodes[0][0]
+
+if __name__ == "__main__":
+  matrix = [[3,3,3,2],
+            [2,3,3,3],
+            [3,2,2,2],
+            [2,1,1,0]]
+  tot_len = len(matrix) * len(matrix[0]) #16.0
+  freq = Counter([str(pixel) for row in matrix for pixel in row]) #traversing a row and then a single pixel 
+  #to count all values using list compreshensions
+  print('Frequency',freq)
+  prob = {} #dict to store prob of each symbol
+  for pixels in freq:
+   prob[pixels] = freq[pixels]/tot_len #
+  print(freq)
+  print(prob.items())
+  #convert the prob items and append to a list using list comprehension
+  nodes = [(key,value) for key,value in prob.items()]
+  
+  node = make_tree(nodes)
+  print(node)
+  encoding = huffman_encoding_tree(node)
+  print('Encoded',encoding)
+
+  #measure the compression ratio
+  og = 2
+  sum = 0
+  
+  for val in encoding:
+    bit_length = len(encoding[val])
+    sum += prob[val] * bit_length
+  print(sum)
+  compression_ratio = (og/sum)
+  print('The code redundancy has been reduced by a compression ratio of',compression_ratio)
+
